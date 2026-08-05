@@ -58,11 +58,6 @@ async def help_command(message: Message) -> None:
     await message.answer("Use the menu below to explore my portfolio or send a project request.", reply_markup=main_keyboard(language))
 
 
-@router.message(Command("help"))
-async def help_command(message: Message) -> None:
-    await message.answer("Use the menu below to explore my portfolio or send a project request.", reply_markup=main_keyboard("en"))
-
-
 @router.message(lambda message: message.text in {"Language", "Мова"})
 async def choose_language(message: Message) -> None:
     await message.answer("Choose your language / Оберіть мову:", reply_markup=language_keyboard())
