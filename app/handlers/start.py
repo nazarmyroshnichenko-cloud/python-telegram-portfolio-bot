@@ -24,11 +24,16 @@ TEXT = {
 }
 
 
-def get_language(user: Message | CallbackQuery) -> str:
-    return "en"
+async def get_language(user_id: int) -> str:
+    async with SessionFactory() as session:
+        user = await session.get(User, user_id)
+        return user.language if user and user.language else "en"
 
 
-async def save_user(message: Message, language: str = "en") -> None:
+async def save_user(message: Message, language: str | None = None) -> None:
+    language = language or message.from_user.language_code or "en"
+    if language not in TEXT:
+        language = "en"
     async with SessionFactory() as session:
         user = await session.get(User, message.from_user.id)
         if user is None:
@@ -39,10 +44,18 @@ async def save_user(message: Message, language: str = "en") -> None:
         await session.commit()
 
 
+
 @router.message(CommandStart())
 async def start(message: Message) -> None:
     await save_user(message)
-    await message.answer(TEXT["en"]["welcome"], reply_markup=main_keyboard("en"))
+    language = await get_language(message.from_user.id)
+    await message.answer(TEXT[language]["welcome"], reply_markup=main_keyboard(language))
+
+
+@router.message(Command("help"))
+async def help_command(message: Message) -> None:
+    language = await get_language(message.from_user.id)
+    await message.answer("Use the menu below to explore my portfolio or send a project request.", reply_markup=main_keyboard(language))
 
 
 @router.message(Command("help"))
